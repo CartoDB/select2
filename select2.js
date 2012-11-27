@@ -661,6 +661,28 @@ the specific language governing permissions and limitations under the Apache Lic
             }
 
             if (opts.element.is(":disabled") || opts.element.is("[readonly='readonly']")) this.disable();
+
+            // CartoDB 2.0 custom element ////////////////////////////////////////////////////////////////////////////////
+            if ($(this.container).hasClass("color_ramp")) {
+              try {
+                var color = $(this.container).find(".select2-choice").text().replace(/ /g,"")
+                  , bucket = $(this.container).attr("class").match(/(\d)_buckets/)[1]
+                  , html = "<ul>"
+                  , colors = cdb.admin.color_ramps[color][bucket];
+
+                for (var j=0, c_l = colors.length; j<c_l; j++) {
+                  var color = colors[j];
+                  html += "<li style='background:" + color + ";'></li>";
+                }
+
+                html += "</ul>";
+
+                $(this.container).find('.select2-choice').append(html);
+              } catch(e) {
+                cdb.log.info("Failing Select plugin when tries to generate a color ramp dropdown");
+              }
+            }
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
         },
 
         // abstract
@@ -716,7 +738,11 @@ the specific language governing permissions and limitations under the Apache Lic
                             node.addClass(self.opts.formatResultCssClass(result));
 
                             label=$("<div></div>");
-                            label.addClass("select2-result-label");
+                            //label.addClass("select2-result-label");
+
+                            // CartoDB 2.0 custom element ////////////////////////////////////////////////////////////
+                            label.addClass("select2-result-label " + ( color_ramp ? result.text : '' ));
+                            //////////////////////////////////////////////////////////////////////////////////////////
 
                             formatted=opts.formatResult(result, label, query);
                             if (formatted!==undefined) {
@@ -732,6 +758,32 @@ the specific language governing permissions and limitations under the Apache Lic
                                 populate(result.children, innerContainer, depth+1);
                                 node.append(innerContainer);
                             }
+
+                            // CartoDB 2.0 custom element ////////////////////////////////////////////////////////////
+                            var color_ramp = $(container.prevObject).hasClass("color_ramp");
+
+                            if (color_ramp) {
+
+                              try {
+                                label.html('');
+                                var color = result.text
+                                  , bucket = $(container.prevObject).attr("class").match(/(\d)_buckets/)[1]
+                                  , html = "<ul>"
+                                  , colors = cdb.admin.color_ramps[color][bucket];
+
+                                for (var j=0, c_l = colors.length; j<c_l; j++) {
+                                  var color = colors[j];
+                                  html += "<li class='color' style='background:" + color + ";'></li>";
+                                }
+
+                                html += "</ul>";
+
+                                label.append(html);
+                              } catch(e) {
+                                cdb.log.info("Failing Select plugin when tries to generate a color ramp dropdown");
+                              }
+                            }
+                            //////////////////////////////////////////////////////////////////////////////////////////
 
                             node.data("select2-data", result);
                             container.append(node);
