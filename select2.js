@@ -1007,7 +1007,15 @@ the specific language governing permissions and limitations under the Apache Lic
                         $(window).unbind(resize);
                     }
                     s2.select2("close");
-                })
+                });
+
+                $(window).bind(scroll, function() {
+                    var s2 = $(selector);
+                    if (s2.length == 0) {
+                        $(window).unbind(scroll);
+                    }
+                    s2.select2("close");
+                });
             }, 10);
 
             this.clearDropdownAlignmentPreference();
@@ -1042,6 +1050,7 @@ the specific language governing permissions and limitations under the Apache Lic
                 $(this).unbind("scroll." + self.containerId);
             });
             $(window).unbind("resize." + this.containerId);
+            $(window).unbind("scroll." + this.containerId);
 
             this.clearDropdownAlignmentPreference();
 
