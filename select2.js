@@ -842,6 +842,29 @@ the specific language governing permissions and limitations under the Apache Lic
             if (this.autofocus) this.focus();
 
             this.search.attr("placeholder", opts.searchInputPlaceholder);
+
+
+            // CartoDB 2.0 custom element ////////////////////////////////////////////////////////////////////////////////
+            if ($(this.container).hasClass("color_ramp")) {
+              try {
+                var color = $(this.container).find(".select2-choice").text().replace(/ /g,"")
+                  , bucket = $(this.container).attr("class").match(/(\d)_buckets/)[1]
+                  , html = "<ul>"
+                  , colors = cdb.admin.color_ramps[color][bucket];
+
+                for (var j=0, c_l = colors.length; j<c_l; j++) {
+                  var color = colors[j];
+                  html += "<li style='background:" + color + ";'></li>";
+                }
+
+                html += "</ul>";
+
+                $(this.container).find('.select2-choice').append(html);
+              } catch(e) {
+                cdb.log.info("Failing Select plugin when tries to generate a color ramp dropdown");
+              }
+            }
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
         },
 
         // abstract
@@ -958,7 +981,13 @@ the specific language governing permissions and limitations under the Apache Lic
                             node.attr("role", "presentation");
 
                             label=$(document.createElement("div"));
-                            label.addClass("select2-result-label");
+                            //label.addClass("select2-result-label");
+
+                            // CartoDB 2.0 custom element ////////////////////////////////////////////////////////////
+                            label.addClass("select2-result-label " + ( color_ramp ? result.text : '' ));
+                            //////////////////////////////////////////////////////////////////////////////////////////
+
+
                             label.attr("id", "select2-result-label-" + nextUid());
                             label.attr("role", "option");
 
@@ -976,6 +1005,34 @@ the specific language governing permissions and limitations under the Apache Lic
                                 populate(result.children, innerContainer, depth+1);
                                 node.append(innerContainer);
                             }
+
+
+                            // CartoDB 2.0 custom element ////////////////////////////////////////////////////////////
+                            var color_ramp = $(container.prevObject).hasClass("color_ramp");
+
+                            if (color_ramp) {
+
+                              try {
+                                label.html('');
+                                var color = result.text
+                                  , bucket = $(container.prevObject).attr("class").match(/(\d)_buckets/)[1]
+                                  , html = "<table><tr>"
+                                  , colors = cdb.admin.color_ramps[color][bucket];
+
+                                for (var j=0, c_l = colors.length; j<c_l; j++) {
+                                  var color = colors[j];
+                                  html += "<td class='color' style='background:" + color + ";'></td>";
+                                }
+
+                                html += "</tr></table>";
+
+                                label.append(html);
+                              } catch(e) {
+                                cdb.log.info("Failing Select plugin when tries to generate a color ramp dropdown");
+                              }
+                            }
+                            //////////////////////////////////////////////////////////////////////////////////////////
+
 
                             node.data("select2-data", result);
                             nodes.push(node[0]);
@@ -1381,7 +1438,30 @@ the specific language governing permissions and limitations under the Apache Lic
                 orient = "orientationchange."+cid,
                 mask;
 
+<<<<<<< HEAD
             this.container.addClass("select2-dropdown-open").addClass("select2-container-active");
+=======
+            window.setTimeout(function() {
+                // this is done inside a timeout because IE will sometimes fire a resize event while opening
+                // the dropdown and that causes this handler to immediately close it. this way the dropdown
+                // has a chance to fully open before we start listening to resize events
+                $(window).bind(resize, function() {
+                    var s2 = $(selector);
+                    if (s2.length == 0) {
+                        $(window).unbind(resize);
+                    }
+                    s2.select2("close");
+                });
+
+                $(window).bind(scroll, function() {
+                    var s2 = $(selector);
+                    if (s2.length == 0) {
+                        $(window).unbind(scroll);
+                    }
+                    s2.select2("close");
+                });
+            }, 10);
+>>>>>>> added window scroll binding
 
             this.clearDropdownAlignmentPreference();
 
@@ -1452,8 +1532,16 @@ the specific language governing permissions and limitations under the Apache Lic
                 resize = "resize."+cid,
                 orient = "orientationchange."+cid;
 
+<<<<<<< HEAD
             // unbind event listeners
             this.container.parents().add(window).each(function () { $(this).off(scroll).off(resize).off(orient); });
+=======
+            this.container.parents().each(function() {
+                $(this).unbind("scroll." + self.containerId);
+            });
+            $(window).unbind("resize." + this.containerId);
+            $(window).unbind("scroll." + this.containerId);
+>>>>>>> added window scroll binding
 
             this.clearDropdownAlignmentPreference();
 
